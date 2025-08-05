@@ -59,7 +59,7 @@ API untuk sistem Lembaga Sertifikasi Profesi menggunakan Go dengan framework Gin
 1. Clone repository
 
 ```bash
-git clone https://github.com/yourusername/lsp-api.git
+git clone https://github.com/baradika/lsp-api.git
 cd lsp-api
 ```
 
@@ -107,9 +107,9 @@ Server akan berjalan di http://localhost:8080
 - **Request Body**:
   ```json
   {
-    "username": "johndoe",
-    "full_name": "John Doe",
-    "email": "john@example.com",
+    "username": "Baradika",
+    "full_name": "Fase Rais Baradika",
+    "email": "pakau@gmail.com",
     "password": "password123"
   }
   ```
@@ -120,8 +120,8 @@ Server akan berjalan di http://localhost:8080
     "message": "User registered successfully",
     "data": {
       "id": 1,
-      "username": "johndoe",
-      "email": "john@example.com"
+      "username": "Baradika",
+      "email": "pakau@gmail.com"
     }
   }
   ```
@@ -133,7 +133,7 @@ Server akan berjalan di http://localhost:8080
 - **Request Body**:
   ```json
   {
-    "email": "john@example.com",
+    "email": "pakau@gmail.com",
     "password": "password123"
   }
   ```
@@ -366,17 +366,3 @@ Server akan berjalan di http://localhost:8080
     "message": "Assessor completeness updated successfully"
   }
   ```
-
-## Kontribusi
-
-Kontribusi selalu diterima. Untuk berkontribusi:
-
-1. Fork repository
-2. Buat branch baru (`git checkout -b feature/amazing-feature`)
-3. Commit perubahan Anda (`git commit -m 'Add some amazing feature'`)
-4. Push ke branch (`git push origin feature/amazing-feature`)
-5. Buka Pull Request
-
-## Lisensi
-
-Distribusikan di bawah Lisensi MIT. Lihat `LICENSE` untuk informasi lebih lanjut.
