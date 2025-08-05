@@ -1,0 +1,382 @@
+# LSP API (Lembaga Sertifikasi Profesi)
+
+API untuk sistem Lembaga Sertifikasi Profesi menggunakan Go dengan framework Gin.
+
+## Fitur
+
+1. **Autentikasi**
+   - Register (username/fullname, email, password)
+   - Login (email, password)
+   - Logout (menggunakan JWT)
+   - Middleware autentikasi untuk proteksi endpoint
+
+2. **Manajemen Data Asesor**
+   - CRUD untuk data asesor dengan field:
+     * Nama lengkap
+     * No registrasi (unik)
+     * Email
+     * No telepon
+     * Kompetensi (bisa multiple)
+   - Endpoint khusus untuk kelengkapan data asesor
+
+## Persyaratan Teknis
+
+- Struktur folder yang aman dan terorganisir dengan baik (layered architecture)
+- Koneksi ke database MySQL
+- GORM sebagai ORM
+- Clean code dan best practices
+- Validasi input
+- JWT untuk autentikasi
+- Error handling yang baik
+- Environment variables untuk konfigurasi sensitif
+
+## Struktur Folder
+├── cmd/
+│   └── main.go
+├── internal/
+│   ├── config/
+│   ├── controllers/
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   ├── utils/
+│   └── middleware/
+├── pkg/
+├── migrations/
+├── .env
+└── go.mod
+
+
+## Setup dan Penggunaan
+
+### Prasyarat
+
+- Go 1.16 atau lebih tinggi
+- MySQL
+
+### Instalasi
+
+1. Clone repository
+
+```bash
+git clone https://github.com/yourusername/lsp-api.git
+cd lsp-api
+```
+
+2. Instal dependensi
+
+```bash
+go mod download
+```
+
+3. Konfigurasi .env
+
+Buat file .env di root project dan isi dengan konfigurasi berikut:
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=lsp_db
+
+API_PORT=8080
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRY=24h
+
+4. Buat database MySQL
+
+```sql
+CREATE DATABASE lsp_db;
+```
+
+5. Jalankan aplikasi
+
+```bash
+go run cmd/main.go
+```
+
+Server akan berjalan di http://localhost:8080
+
+## Daftar Endpoint
+
+### Autentikasi
+
+#### Register
+
+- **URL**: `/api/v1/auth/register`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "username": "johndoe",
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "User registered successfully",
+    "data": {
+      "id": 1,
+      "username": "johndoe",
+      "email": "john@example.com"
+    }
+  }
+  ```
+
+#### Login
+
+- **URL**: `/api/v1/auth/login`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "email": "john@example.com",
+    "password": "password123"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Login successful",
+    "data": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  }
+  ```
+
+#### Logout
+
+- **URL**: `/api/v1/auth/logout`
+- **Method**: `POST`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Logged out successfully"
+  }
+  ```
+
+### Manajemen Asesor
+
+#### Membuat Asesor Baru
+
+- **URL**: `/api/v1/assessors`
+- **Method**: `POST`
+- **Headers**: `Authorization: Bearer {token}`
+- **Request Body**:
+  ```json
+  {
+    "full_name": "Jane Smith",
+    "registration": "ASR-001",
+    "email": "jane@example.com",
+    "phone": "08123456789",
+    "competencies": [
+      {
+        "id": 1,
+        "name": "Web Development",
+        "code": "WD-001",
+        "description": "Competency in web development"
+      }
+    ]
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Assessor created successfully",
+    "data": {
+      "id": 1,
+      "full_name": "Jane Smith",
+      "registration": "ASR-001",
+      "email": "jane@example.com",
+      "phone": "08123456789",
+      "competencies": [
+        {
+          "id": 1,
+          "name": "Web Development",
+          "code": "WD-001",
+          "description": "Competency in web development"
+        }
+      ],
+      "is_complete": false,
+      "created_at": "2023-10-15T10:30:00Z",
+      "updated_at": "2023-10-15T10:30:00Z"
+    }
+  }
+  ```
+
+#### Mendapatkan Semua Asesor
+
+- **URL**: `/api/v1/assessors`
+- **Method**: `GET`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Assessors retrieved successfully",
+    "data": [
+      {
+        "id": 1,
+        "full_name": "Jane Smith",
+        "registration": "ASR-001",
+        "email": "jane@example.com",
+        "phone": "08123456789",
+        "competencies": [
+          {
+            "id": 1,
+            "name": "Web Development",
+            "code": "WD-001",
+            "description": "Competency in web development"
+          }
+        ],
+        "is_complete": false,
+        "created_at": "2023-10-15T10:30:00Z",
+        "updated_at": "2023-10-15T10:30:00Z"
+      }
+    ]
+  }
+  ```
+
+#### Mendapatkan Asesor Berdasarkan ID
+
+- **URL**: `/api/v1/assessors/{id}`
+- **Method**: `GET`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Assessor retrieved successfully",
+    "data": {
+      "id": 1,
+      "full_name": "Jane Smith",
+      "registration": "ASR-001",
+      "email": "jane@example.com",
+      "phone": "08123456789",
+      "competencies": [
+        {
+          "id": 1,
+          "name": "Web Development",
+          "code": "WD-001",
+          "description": "Competency in web development"
+        }
+      ],
+      "is_complete": false,
+      "created_at": "2023-10-15T10:30:00Z",
+      "updated_at": "2023-10-15T10:30:00Z"
+    }
+  }
+  ```
+
+#### Memperbarui Asesor
+
+- **URL**: `/api/v1/assessors/{id}`
+- **Method**: `PUT`
+- **Headers**: `Authorization: Bearer {token}`
+- **Request Body**:
+  ```json
+  {
+    "full_name": "Jane Smith Updated",
+    "registration": "ASR-001",
+    "email": "jane.updated@example.com",
+    "phone": "08123456789",
+    "competencies": [
+      {
+        "id": 1,
+        "name": "Web Development",
+        "code": "WD-001",
+        "description": "Competency in web development"
+      },
+      {
+        "id": 2,
+        "name": "Mobile Development",
+        "code": "MD-001",
+        "description": "Competency in mobile development"
+      }
+    ]
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Assessor updated successfully",
+    "data": {
+      "id": 1,
+      "full_name": "Jane Smith Updated",
+      "registration": "ASR-001",
+      "email": "jane.updated@example.com",
+      "phone": "08123456789",
+      "competencies": [
+        {
+          "id": 1,
+          "name": "Web Development",
+          "code": "WD-001",
+          "description": "Competency in web development"
+        },
+        {
+          "id": 2,
+          "name": "Mobile Development",
+          "code": "MD-001",
+          "description": "Competency in mobile development"
+        }
+      ],
+      "is_complete": false,
+      "created_at": "2023-10-15T10:30:00Z",
+      "updated_at": "2023-10-15T11:15:00Z"
+    }
+  }
+  ```
+
+#### Menghapus Asesor
+
+- **URL**: `/api/v1/assessors/{id}`
+- **Method**: `DELETE`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Assessor deleted successfully"
+  }
+  ```
+
+#### Memperbarui Status Kelengkapan Asesor
+
+- **URL**: `/api/v1/assessors/{id}/completeness`
+- **Method**: `PATCH`
+- **Headers**: `Authorization: Bearer {token}`
+- **Request Body**:
+  ```json
+  {
+    "is_complete": true
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Assessor completeness updated successfully"
+  }
+  ```
+
+## Kontribusi
+
+Kontribusi selalu diterima. Untuk berkontribusi:
+
+1. Fork repository
+2. Buat branch baru (`git checkout -b feature/amazing-feature`)
+3. Commit perubahan Anda (`git commit -m 'Add some amazing feature'`)
+4. Push ke branch (`git push origin feature/amazing-feature`)
+5. Buka Pull Request
+
+## Lisensi
+
+Distribusikan di bawah Lisensi MIT. Lihat `LICENSE` untuk informasi lebih lanjut.
