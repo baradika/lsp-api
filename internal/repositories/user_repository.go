@@ -3,12 +3,15 @@ package repositories
 import (
 	"lsp-api/internal/models"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type UserRepository interface {
 	Create(user *models.User) error
 	FindByEmail(email string) (*models.User, error)
+	CreateAsesi(asesi *models.Asesi) error
+	VerifyPassword(hashedPassword, password string) error
 }
 
 type userRepository struct {
@@ -30,4 +33,12 @@ func (r *userRepository) FindByEmail(email string) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) CreateAsesi(asesi *models.Asesi) error {
+	return r.db.Create(asesi).Error
+}
+
+func (r *userRepository) VerifyPassword(hashedPassword, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

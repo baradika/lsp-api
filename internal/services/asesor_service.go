@@ -50,13 +50,22 @@ func (s *asesorService) CreateAsesor(namaLengkap, noRegistrasi, email, noTelepon
 		return nil, errors.New("one or more kompetensi not found")
 	}
 
+	// Convert kompetensi to string representation (comma-separated IDs or names)
+	kompetensiStr := ""
+	for i, k := range kompetensi {
+		if i > 0 {
+			kompetensiStr += ","
+		}
+		kompetensiStr += k.Kode // or use k.Nama or fmt.Sprintf("%d", k.ID) depending on your needs
+	}
+
 	// Create new asesor
 	asesor := &models.Asesor{
 		NamaLengkap:  namaLengkap,
 		NoRegistrasi: noRegistrasi,
 		Email:        email,
 		NoTelepon:    noTelepon,
-		Kompetensi:   kompetensi,
+		Kompetensi:   kompetensiStr,
 	}
 
 	err = s.asesorRepo.Create(asesor)
@@ -94,12 +103,21 @@ func (s *asesorService) UpdateAsesor(id uint, namaLengkap, noRegistrasi, email, 
 		return nil, errors.New("one or more kompetensi not found")
 	}
 
+	// Convert kompetensi to string representation
+	kompetensiStr := ""
+	for i, k := range kompetensi {
+		if i > 0 {
+			kompetensiStr += ","
+		}
+		kompetensiStr += k.Kode // or use k.Nama or fmt.Sprintf("%d", k.ID) depending on your needs
+	}
+
 	// Update asesor
 	asesor.NamaLengkap = namaLengkap
 	asesor.NoRegistrasi = noRegistrasi
 	asesor.Email = email
 	asesor.NoTelepon = noTelepon
-	asesor.Kompetensi = kompetensi
+	asesor.Kompetensi = kompetensiStr
 
 	err = s.asesorRepo.Update(asesor)
 	if err != nil {

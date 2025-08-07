@@ -5,6 +5,7 @@ type Response struct {
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
+	Errors  interface{} `json:"errors,omitempty"`
 }
 
 func SuccessResponse(message string, data interface{}) Response {
@@ -15,9 +16,10 @@ func SuccessResponse(message string, data interface{}) Response {
 	}
 }
 
-func ErrorResponse(errorMessage string) Response {
+func ErrorResponse(errorMessage string, errors interface{}) Response {
 	return Response{
 		Success: false,
 		Error:   errorMessage,
+		Errors:  errors,
 	}
 }

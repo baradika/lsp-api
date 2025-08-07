@@ -43,7 +43,7 @@ func main() {
 	asesorService := services.NewAsesorService(asesorRepo, kompetensiRepo)
 
 	// Initialize controllers
-	authController := controllers.NewAuthController(authService)
+	authController := controllers.NewAuthController(authService, db)
 	asesorController := controllers.NewAsesorController(asesorService)
 
 	// Initialize middleware

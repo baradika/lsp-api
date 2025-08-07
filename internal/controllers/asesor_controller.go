@@ -39,9 +39,9 @@ type UpdateAsesorRequest struct {
 func (c *AsesorController) CreateAsesor(ctx *gin.Context) {
 	var req CreateAsesorRequest
 
-	valid, _ := utils.ValidateRequest(ctx, &req)
+	valid, errs := utils.ValidateRequest(ctx, &req)
 	if !valid {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Validation failed"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Validation failed", errs))
 		return
 	}
 
@@ -54,7 +54,7 @@ func (c *AsesorController) CreateAsesor(ctx *gin.Context) {
 	)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err.Error()))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err.Error(), nil))
 		return
 	}
 
@@ -64,15 +64,15 @@ func (c *AsesorController) CreateAsesor(ctx *gin.Context) {
 func (c *AsesorController) UpdateAsesor(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid asesor ID"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid asesor ID", nil))
 		return
 	}
 
 	var req UpdateAsesorRequest
 
-	valid, _ := utils.ValidateRequest(ctx, &req)
+	valid, errs := utils.ValidateRequest(ctx, &req)
 	if !valid {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Validation failed"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Validation failed", errs))
 		return
 	}
 
@@ -86,7 +86,7 @@ func (c *AsesorController) UpdateAsesor(ctx *gin.Context) {
 	)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err.Error()))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err.Error(), nil))
 		return
 	}
 
@@ -96,13 +96,13 @@ func (c *AsesorController) UpdateAsesor(ctx *gin.Context) {
 func (c *AsesorController) DeleteAsesor(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid asesor ID"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid asesor ID", nil))
 		return
 	}
 
 	err = c.asesorService.DeleteAsesor(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err.Error()))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err.Error(), nil))
 		return
 	}
 
@@ -112,13 +112,13 @@ func (c *AsesorController) DeleteAsesor(ctx *gin.Context) {
 func (c *AsesorController) GetAsesor(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid asesor ID"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid asesor ID", nil))
 		return
 	}
 
 	asesor, err := c.asesorService.GetAsesorByID(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, utils.ErrorResponse("Asesor not found"))
+		ctx.JSON(http.StatusNotFound, utils.ErrorResponse("Asesor not found", nil))
 		return
 	}
 
@@ -128,7 +128,7 @@ func (c *AsesorController) GetAsesor(ctx *gin.Context) {
 func (c *AsesorController) GetAllAsesors(ctx *gin.Context) {
 	asesors, err := c.asesorService.GetAllAsesors()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to retrieve asesors"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to retrieve asesors", nil))
 		return
 	}
 
@@ -140,7 +140,7 @@ func (c *AsesorController) GetAsesorByNoRegistrasi(ctx *gin.Context) {
 
 	asesor, err := c.asesorService.GetAsesorByNoRegistrasi(noRegistrasi)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, utils.ErrorResponse("Asesor not found"))
+		ctx.JSON(http.StatusNotFound, utils.ErrorResponse("Asesor not found", nil))
 		return
 	}
 
