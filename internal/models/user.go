@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -23,9 +25,18 @@ func (User) TableName() string {
 	return "users"
 }
 
-// Add this method to the User model
+// ComparePassword compares the provided password with the hashed password
 func (u *User) ComparePassword(password string) bool {
-	// In a real application, you would use bcrypt.CompareHashAndPassword here
-	// For now, we'll do a simple comparison (not secure for production!)
-	return u.Password == password
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	return err == nil
+}
+
+// HashPassword hashes the provided password
+func (u *User) HashPassword(password string) error {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.Password = string(hashed)
+	return nil
 }

@@ -3,8 +3,8 @@
 ### Authentikasi 
 
 #### Register Asesor
-* URL: /api/v1/auth/register/asesor
-* Method: POST
+* URL: `/api/v1/auth/register/asesor`
+* Method: `POST`
 * Request Body:
   ```json
   {
@@ -13,5 +13,13 @@
     "password": "string",
   }
   ```
+
+ #### Register Asesi
+ * URL: `/api/v1/auth/register/asesi`
+ * Method: `POST`
+ * Requst Body:
+ ```json
+
+ ```
 
   

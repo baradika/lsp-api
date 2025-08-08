@@ -43,7 +43,7 @@ func AuthMiddleware(authService services.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		// Set user ID in context
+		// Set user data in context
 		userID, ok := claims["user_id"].(float64)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse("Invalid token claims", nil))
@@ -53,6 +53,8 @@ func AuthMiddleware(authService services.AuthService) gin.HandlerFunc {
 		c.Set("userID", uint(userID))
 		c.Set("email", claims["email"])
 		c.Set("username", claims["username"])
+		c.Set("role", claims["role"])
+		c.Set("token", tokenString)
 
 		c.Next()
 	}

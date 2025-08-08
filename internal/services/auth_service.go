@@ -6,22 +6,24 @@ import (
 	"lsp-api/internal/config"
 	"lsp-api/internal/models"
 	"lsp-api/internal/repositories"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type authService struct {
-	userRepo repositories.UserRepository
-	config   *config.Config
+	userRepo  repositories.UserRepository
+	asesiRepo repositories.AsesiRepository
+	config    *config.Config
 }
 
-func NewAuthService(userRepo repositories.UserRepository, config *config.Config) AuthService {
+func NewAuthService(userRepo repositories.UserRepository, asesiRepo repositories.AsesiRepository, config *config.Config) AuthService {
 	return &authService{
-		userRepo: userRepo,
-		config:   config,
+		userRepo:  userRepo,
+		asesiRepo: asesiRepo,
+		config:    config,
 	}
 }
 
@@ -32,6 +34,51 @@ type AuthService interface {
 	AsesiLogin(email, password string) (string, error)
 	Login(email, password string) (string, error)
 	ValidateToken(tokenString string) (*jwt.Token, error)
+	GetUserProfile(userID uint) (*models.User, error)
+}
+
+func (s *authService) Register(username, email, password string) error {
+	// Check if user already exists
+	existingUser, err := s.userRepo.FindByEmail(email)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if existingUser != nil {
+		return errors.New("user with this email already exists")
+	}
+
+	// Create user with Asesi role
+	user := &models.User{
+		Username: username,
+		Email:    email,
+		Role:     "Asesi",
+		IsActive: true,
+	}
+
+	// Hash password
+	if err := user.HashPassword(password); err != nil {
+		return err
+	}
+
+	// Create user
+	if err := s.userRepo.Create(user); err != nil {
+		return err
+	}
+
+	// Create Asesi record
+	asesi := &models.Asesi{
+		UserID:      user.ID,
+		NamaLengkap: username,
+		Email:       email,
+	}
+
+	if err := s.asesiRepo.Create(asesi); err != nil {
+		return err
+	}
+
+	// Update user's id_related
+	user.IDRelated = &asesi.ID
+	return s.userRepo.Update(user)
 }
 
 func (s *authService) AdminLogin(email, password string) (string, error) {
@@ -43,7 +90,7 @@ func (s *authService) AdminLogin(email, password string) (string, error) {
 		return "", err
 	}
 
-	if user.Role != "admin" {
+	if user.Role != "Admin" {
 		return "", errors.New("unauthorized access")
 	}
 
@@ -100,75 +147,36 @@ func (s *authService) Login(email, password string) (string, error) {
 		return "", err
 	}
 
-	// Verify password
-	if err := s.userRepo.VerifyPassword(user.Password, password); err != nil {
-		return "", errors.New("invalid credentials")
+	if !user.ComparePassword(password) {
+		return "", errors.New("invalid email or password")
 	}
 
 	return s.generateToken(user)
 }
 
 func (s *authService) generateToken(user *models.User) (string, error) {
-	expiry, err := time.ParseDuration(s.config.JWTExpiry)
-	if err != nil {
-		return "", fmt.Errorf("invalid JWT expiry time: %w", err)
-	}
-
+	expiry, _ := strconv.Atoi(s.config.JWTExpiry[:len(s.config.JWTExpiry)-1])
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
-		"email":    user.Email,
 		"username": user.Username,
+		"email":    user.Email,
 		"role":     user.Role,
-		"exp":      time.Now().Add(expiry).Unix(),
+		"exp":      time.Now().Add(time.Duration(expiry) * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
-	if err != nil {
-		return "", fmt.Errorf("failed to sign token: %w", err)
-	}
-
-	return tokenString, nil
+	return token.SignedString([]byte(s.config.JWTSecret))
 }
 
 func (s *authService) ValidateToken(tokenString string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Validate the signing method
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(s.config.JWTSecret), nil
 	})
-
-	if err != nil {
-		return nil, fmt.Errorf("invalid token: %w", err)
-	}
-
-	return token, nil
 }
 
-func (s *authService) Register(username, email, password string) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	// Create user with default role "Asesi"
-	user := models.User{
-		Username:  username,
-		Email:     email,
-		Password:  string(hashedPassword),
-		Role:      "Asesi", // Default role
-		IsActive:  true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	// Only create user record, don't create asesi record
-	return s.userRepo.Create(&user)
-}
-
-func (u *models.User) ComparePassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	return err == nil
+func (s *authService) GetUserProfile(userID uint) (*models.User, error) {
+	return s.userRepo.FindByID(userID)
 }
